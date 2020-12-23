@@ -1,31 +1,72 @@
 <template>
   <div id="app">
-    <div class="container">
-      <!-- search bar -->
-      <div class="search-box">
-        <input type="text" placeholder="Search...." class="search-bar" />
-      </div>
-
-      <div class="weather-wrapper">
-        <!-- location & date info -->
-        <div class="location-box">
-          <div class="location">Taichung</div>
-          <div class="date">Octorber 8th 2020</div>
+    <div
+      class="containerwrap"
+      :class="weather.main && weather.main.temp > 16 ? 'warm' : ''"
+    >
+      <div class="container">
+        <!-- search bar -->
+        <div class="search-box">
+          <input
+            type="text"
+            placeholder="Search...."
+            class="search-bar"
+            v-model="query"
+            @keyup.enter="fetchWeather"
+          />
         </div>
-      </div>
 
-      <!-- weather info -->
-      <div class="weather-box">
-        <div class="temperature">26°C</div>
-        <div class="weather">Cloud</div>
+        <div class="weather-wrapper" v-if="weather.main">
+          <!-- location & date info -->
+          <div class="location-box">
+            <div class="location">{{ weather.name }}</div>
+            <div class="date">{{ currentDate }}</div>
+          </div>
+        </div>
+
+        <!-- weather info -->
+        <div class="weather-box">
+          <div class="temperature">{{ Math.round(weather.main.temp) }}°C</div>
+          <div class="weather">{{ weather.weather[0].main }}</div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import dayjs from "dayjs";
+import advancedFormat from "dayjs/plugin/advancedFormat";
+dayjs.extend(advancedFormat);
+
 export default {
   name: "App",
+  data() {
+    return {
+      api_key: process.env.VUE_APP_WEATHER_KEY,
+      base_url: "https://api.openweathermap.org/data/2.5/",
+      query: "Taichung",
+      weather: {},
+      date: "",
+    };
+  },
+  methods: {
+    async fetchWeather() {
+      const data = await fetch(
+        `${this.base_url}weather?q=${this.query}&units=metric&APPID=${this.api_key}`
+      );
+      // console.log(await data.json());
+      this.weather = await data.json();
+    },
+  },
+  computed: {
+    currentDate() {
+      return dayjs().format(`MMMM Do YYYY`);
+    },
+  },
+  created() {
+    this.fetchWeather();
+  },
 };
 </script>
   
@@ -34,17 +75,17 @@ export default {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
 }
 
-#app {
+.containerwrap {
   background-image: url("./assets/cold.jpg");
   background-size: cover;
   background-position: 50%;
   transform: 0.5s;
 }
 
-#app .warm {
+.containerwrap .warm {
   background-image: url("./assets/warm.jpg");
 }
 
